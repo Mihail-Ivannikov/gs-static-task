@@ -4,12 +4,31 @@ on: workflow_dispatch       # set the triggers to your liking
 #     branches: [ main ]
 
 jobs:
-  Bucket-Deploy:
-    runs-on: 'ubuntu-latest'
+  job_id:
+    runs-on: 'ubuntu-22.04'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
-      - id: 'deploy'
-        uses: 'bitovi/github-actions-gcp-bucket'
-        with:
-          gcp_access_key: ${{ secrets.GOOGLE_CREDENTIALS }}
-          bucket_name: ${{ vars.BUCKET_NAME }}
-          file_name: ${{ vars.FILE_NAME }}
+    - id: 'checkout'
+      uses: 'actions/checkout@v7'
+
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v3'
+      with:
+        service_account: '${{vars.SERVICE_ACCOUNT}}'
+
+    - id: 'upload-files'
+      uses: 'google-github-actions/upload-cloud-storage@v3'
+      with:
+        path: 'myfolder'
+        glob: '**/*.html'
+        parent: false
+        destination: '${{vars.BUCKET_NAME}}'
+
+    # Example of using the output
+    - id: 'uploaded-files'
+      uses: 'foo/bar@v1'
+      env:
+        file: '${{ steps.upload-files.outputs.uploaded }}'
